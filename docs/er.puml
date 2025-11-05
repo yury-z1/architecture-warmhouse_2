@@ -1,0 +1,91 @@
+@startuml
+entity "User" as user {
+  * id : uuid [PK]
+  --
+  email : text [UQ]
+  password_hash : text
+  created_at : timestamp
+}
+entity "House" as house {
+  * id : uuid [PK]
+  --
+  owner_id : uuid [FK -> user.id]
+  address : text
+  created_at : timestamp
+}
+entity "DeviceType" as dtype {
+  * id : uuid [PK]
+  --
+  name : text
+  protocol : text
+  schema_version : int
+}
+entity "Device" as device {
+  * id : uuid [PK]
+  --
+  house_id  : uuid [FK -> house.id]
+  type_id   : uuid [FK -> dtype.id]
+  serial_number : text [UQ]
+  status : text
+  last_seen_at : timestamp
+}
+entity "Module" as module {
+  * id : uuid [PK]
+  --
+  device_id : uuid [FK -> device.id]
+  kind : text
+  config : jsonb
+}
+entity "TelemetryData" as tdata {
+  * id : bigint [PK]
+  --
+  device_id : uuid [FK -> device.id]
+  module_id : uuid [FK -> module.id]
+  ts : timestamp
+  metric : text
+  value : numeric
+}
+entity "Rule" as rule {
+  * id : uuid [PK]
+  --
+  house_id : uuid [FK -> house.id]
+  name : text
+  trigger : jsonb
+  action  : jsonb
+  enabled : boolean
+}
+entity "Plan" as plan {
+  * id : uuid [PK]
+  --
+  name : text
+  price_month : numeric
+  limits : jsonb
+}
+entity "Subscription" as sub {
+  * id : uuid [PK]
+  --
+  user_id : uuid [FK -> user.id]
+  plan_id : uuid [FK -> plan.id]
+  status : text
+  started_at : timestamp
+}
+entity "AccessPolicy" as ap {
+  * id : uuid [PK]
+  --
+  user_id : uuid [FK -> user.id]
+  house_id : uuid [FK -> house.id]
+  role : text
+}
+
+user ||--o{ house
+dtype ||--o{ device
+house ||--o{ device
+device ||--o{ module
+device ||--o{ tdata
+module ||--o{ tdata
+house ||--o{ rule
+plan ||--o{ sub
+user ||--o{ sub
+user ||--o{ ap
+house ||--o{ ap
+@enduml
