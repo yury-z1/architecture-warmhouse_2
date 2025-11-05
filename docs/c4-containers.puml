@@ -1,0 +1,58 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+title WarmHouse - C4 Containers (To-Be)
+
+Person(user, "Пользователь")
+
+System_Boundary(warmhouse, "WarmHouse") {
+  Container(web, "Web/App Frontend", "SPA/SSR", "UI")
+  Container(api, "API Gateway", "Nginx/Envoy", "Routing, AuthN, Rate limit")
+  Container(auth, "Auth", "Service", "JWT/OAuth2, RBAC/ABAC")
+  Container(devreg, "Device Registry", "Service", "CRUD устройств, типы, статусы")
+  Container(prov, "Provisioning", "Service", "Подключение/активация устройств")
+  Container(teleIn, "Telemetry Ingest", "Service", "MQTT/HTTP ingest")
+  Container(teleQ, "Telemetry Query", "Service", "Агрегации/поиск")
+  Container(heat, "Heating", "Service", "Команды отоплению")
+  Container(light, "Lighting", "Service", "Команды свету")
+  Container(gate, "Gate", "Service", "Команды воротам")
+  Container(surv, "Surveillance", "Service", "Медиа ссылки/метаданные")
+  Container(rules, "Rules/Orchestrator", "Service", "Сценарии/триггеры")
+  Container(billing, "Billing/Plans", "Service", "Подписки/тарифы")
+
+  ContainerDb(dbAuth, "AuthDB", "PostgreSQL", "")
+  ContainerDb(dbDev,  "DeviceDB", "PostgreSQL", "")
+  ContainerDb(dbTel,  "TelemetryDB", "Timeseries/ClickHouse", "")
+  ContainerDb(dbAct,  "ActuationDB", "PostgreSQL", "")
+  Container(message,  "Message Broker", "Kafka/RabbitMQ", "Pub/Sub")
+  Container(object,   "Object Storage", "S3-compatible", "Фото/видео")
+}
+
+System_Ext(partner, "Партнёрские устройства", "MQTT/HTTP")
+
+Rel(user, web, "UI", "HTTPS")
+Rel(web, api, "REST")
+Rel(api, auth, "AuthN/AuthZ")
+Rel(api, devreg, "REST")
+Rel(api, teleQ, "REST")
+Rel(api, heat, "REST")
+Rel(api, light, "REST")
+Rel(api, gate, "REST")
+Rel(api, surv, "REST")
+Rel(api, rules, "REST")
+Rel(api, billing, "REST")
+
+Rel(teleIn, message, "publish telemetry.ingested")
+Rel(devreg, message, "publish device.registered")
+Rel(rules,  message, "subscribe telemetry/device events")
+Rel(heat,   message, "subscribe command.issued")
+Rel(light,  message, "subscribe command.issued")
+Rel(gate,   message, "subscribe command.issued")
+
+Rel(partner, teleIn, "MQTT/HTTP")
+Rel(surv, object, "store media")
+
+Rel(auth, dbAuth, "SQL")
+Rel(devreg, dbDev, "SQL")
+Rel(teleQ, dbTel, "driver")
+Rel(heat, dbAct, "SQL")
+@enduml

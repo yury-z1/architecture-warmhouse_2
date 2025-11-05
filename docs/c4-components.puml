@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+title Components - Device Registry & Telemetry
+
+Container_Boundary(devreg, "Device Registry") {
+  Component(drApi, "REST API", "OpenAPI", "CRUD устройств/типов")
+  Component(drSvc, "Service Layer", "DDD App Service", "Валидация/правила")
+  Component(drRepo, "Repository", "ORM/SQL", "Доступ к DeviceDB")
+  Component(drEvents, "Event Publisher", "Outbox", "device.registered")
+}
+Rel(drApi, drSvc, "calls")
+Rel(drSvc, drRepo, "read/write")
+Rel(drSvc, drEvents, "emit")
+
+Container_Boundary(tele, "Telemetry") {
+  Component(tiIngest, "Ingest Adapter", "MQTT/HTTP", "Приём телеметрии")
+  Component(tiVal, "Validator", "JSON Schema", "Нормализация/валидация")
+  Component(tiWriter, "Writer", "Batch/Async", "Запись в TS-хранилище")
+  Component(tqApi, "Query API", "REST", "Фильтры/агрегации")
+}
+Rel(tiIngest, tiVal, "validate")
+Rel(tiVal, tiWriter, "persist")
+@enduml
