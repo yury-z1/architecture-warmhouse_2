@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: WarmHouse Public API
+  version: 1.0.0
+servers:
+  - url: https://api.warmhouse.example
+
+paths:
+  /devices:
+    get:
+      summary: Список устройств
+      description: Возвращает устройства текущего пользователя/дома.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Device' }
+    post:
+      summary: Регистрация устройства
+      description: Создает устройство по серийному номеру и типу, привязка к дому.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterDeviceRequest' }
+      responses:
+        '201': { description: Created }
+        '400': { description: Валидационная ошибка }
+        '409': { description: Устройство уже существует }
+
+  /devices/{id}:
+    get:
+      summary: Детали устройства
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Device' }
+        '404': { description: Не найдено }
+
+  /heating/rooms/{roomId}/state:
+    put:
+      summary: Установить целевую температуру
+      description: Асинхронная команда — возвращает 202, результат придет событием.
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { target: { type: number, description: "°C" } }
+              required: [target]
+      responses:
+        '202': { description: Принято к выполнению }
+
+  /telemetry/query:
+    post:
+      summary: Запрос телеметрии
+      description: Возвращает значения метрики за период.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId: { type: string, format: uuid }
+                metric: { type: string }
+                from: { type: string, format: date-time }
+                to: { type: string, format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TelemetryPoint' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Device:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        typeId: { type: string, format: uuid }
+        serialNumber: { type: string }
+        status: { type: string, enum: [online, offline, provisioning] }
+    RegisterDeviceRequest:
+      type: object
+      properties:
+        serialNumber: { type: string }
+        typeId: { type: string, format: uuid }
+        houseId: { type: string, format: uuid }
+      required: [serialNumber, typeId, houseId]
+    TelemetryPoint:
+      type: object
+      properties:
+        ts: { type: string, format: date-time }
+        metric: { type: string }
+        value: { type: number }

@@ -1,0 +1,13 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+title WarmHouse - C4 Context
+
+Person(user, "Пользователь", "Владелец дома, SaaS-подписчик")
+System_Ext(partner, "Партнёрские устройства", "MQTT/HTTP устройства и хабы")
+System_Ext(email, "Email/SMS провайдер", "Уведомления")
+System(monolith, "Монолит", "Go + PostgreSQL, синхронные вызовы")
+
+Rel(user, monolith, "Управление отоплением / просмотр температуры", "HTTPS/Web")
+Rel(monolith, partner, "Polling/Commands", "HTTP")
+Rel(monolith, email, "Уведомления", "HTTP API")
+@enduml
