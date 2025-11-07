@@ -1,0 +1,19 @@
+{
+  "info": { "name": "WarmHouse Demo", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+  "item": [
+    {
+      "name": "Get Temperature",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8081/temperature?location=living-room",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["temperature"],
+          "query": [{ "key": "location", "value": "living-room" }]
+        }
+      }
+    }
+  ]
+}

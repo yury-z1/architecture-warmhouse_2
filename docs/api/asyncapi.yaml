@@ -1,0 +1,69 @@
+asyncapi: 2.6.0
+info:
+  title: WarmHouse Event API
+  version: 1.0.0
+defaultContentType: application/json
+
+servers:
+  prod:
+    url: broker.warmhouse.example:9092
+    protocol: kafka
+
+channels:
+  telemetry.ingested:
+    subscribe:
+      message:
+        name: TelemetryIngested
+        payload:
+          type: object
+          properties:
+            deviceId: { type: string, format: uuid }
+            moduleId: { type: string, format: uuid }
+            ts: { type: string, format: date-time }
+            metric: { type: string }
+            value: { type: number }
+
+  device.registered:
+    publish:
+      message:
+        name: DeviceRegistered
+        payload:
+          type: object
+          properties:
+            deviceId: { type: string, format: uuid }
+            typeId: { type: string, format: uuid }
+            houseId: { type: string, format: uuid }
+
+  device.status.changed:
+    publish:
+      message:
+        name: DeviceStatusChanged
+        payload:
+          type: object
+          properties:
+            deviceId: { type: string, format: uuid }
+            status: { type: string, enum: [online, offline, provisioning] }
+
+  command.issued:
+    publish:
+      message:
+        name: CommandIssued
+        payload:
+          type: object
+          properties:
+            target: { type: string, enum: [heating, lighting, gate] }
+            resourceId: { type: string }
+            command: { type: string }
+            args: { type: object }
+            correlationId: { type: string }
+
+  command.ack:
+    subscribe:
+      message:
+        name: CommandAck
+        payload:
+          type: object
+          properties:
+            correlationId: { type: string }
+            status: { type: string, enum: [accepted, executed, failed] }
+            error: { type: string }
